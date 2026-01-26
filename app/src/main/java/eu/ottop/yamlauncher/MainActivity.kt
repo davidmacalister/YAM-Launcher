@@ -830,7 +830,9 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
             try {
                 appMenuLinearLayoutManager.setScrollEnabled(true)
                 currentFilteredApps = installedApps
+                // Explicitly reset adapter to show full list
                 lifecycleScope.launch {
+                    updateMenu(installedApps)
                     refreshAppMenu()
                 }
                 isResettingSearch = false
