@@ -10,7 +10,7 @@ class StringUtils {
         // Cached regex for cleaning strings (compiled once)
         private val CLEAN_REGEX = Regex("[^\\p{L}0-9]")
 
-        // LRU cache for fuzzy patterns (max 16 entries)
+        // LRU cache for fuzzy patterns (max 16 entries) - thread-safe access
         private val fuzzyPatternCache = object : LinkedHashMap<String, Regex>(16, 0.75f, true) {
             override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Regex>?): Boolean {
                 return size > 16
@@ -41,13 +41,17 @@ class StringUtils {
      * 'cl' will create 'c.*l' which matches 'Clock', 'Calendar'
      * 'msg' will create 'm.*s.*g' which matches 'Messages'
      * 'cmr' will create 'c.*m.*r' which matches 'Camera'
+     *
+     * Thread-safe: synchronized access to cache
      */
     fun getFuzzyPattern(query: String): Regex {
-        return fuzzyPatternCache.getOrPut(query) {
-            val regex = query.toCharArray().joinToString(".*") {
-                Regex.escape(it.toString())
+        synchronized(fuzzyPatternCache) {
+            return fuzzyPatternCache.getOrPut(query) {
+                val regex = query.toCharArray().joinToString(".*") {
+                    Regex.escape(it.toString())
+                }
+                Regex(regex, RegexOption.IGNORE_CASE)
             }
-            Regex(regex, RegexOption.IGNORE_CASE)
         }
     }
 }

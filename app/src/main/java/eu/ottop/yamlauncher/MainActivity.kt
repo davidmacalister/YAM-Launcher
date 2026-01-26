@@ -814,11 +814,12 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
     fun backToHome(animSpeed: Long = sharedPreferenceManager.getAnimationSpeed()) {
         canLaunchShortcut = true
         showHidden = false
-        isResettingSearch = true
 
         // Clear search immediately to prevent race conditions
         searchJob?.cancel()
+        isResettingSearch = true
         searchView.setText(R.string.empty)
+        isResettingSearch = false  // Unblock immediately after programmatic setText
         isSearchActive = false
 
         closeKeyboard()
@@ -835,9 +836,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
                     updateMenu(installedApps)
                     refreshAppMenu()
                 }
-                isResettingSearch = false
             } catch (_: UninitializedPropertyAccessException) {
-                isResettingSearch = false
             }
         }, animSpeed)
     }
@@ -1094,9 +1093,11 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
             }
 
             override fun afterTextChanged(s: Editable?) {
-                if (isResettingSearch) return
                 searchJob = lifecycleScope.launch {
-                    delay(150) // 150ms debounce delay
+                    delay(50) // 50ms debounce delay - prevents excessive filtering during fast typing
+                    while (isResettingSearch) {
+                        delay(16) // Wait for reset to complete
+                    }
                     withContext(Dispatchers.Default) {
                         filterItems(s.toString())
                     }
