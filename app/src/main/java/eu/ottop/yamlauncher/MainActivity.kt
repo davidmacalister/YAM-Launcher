@@ -115,16 +115,17 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
     private lateinit var binding: ActivityMainBinding
     private lateinit var launcherApps: LauncherApps
     private lateinit var installedApps: List<Triple<LauncherActivityInfo, UserHandle, Int>>
-    private var filteredAppsCache: List<Triple<LauncherActivityInfo, UserHandle, Int>> = listOf()
+    private var currentFilteredApps: List<Triple<LauncherActivityInfo, UserHandle, Int>> = listOf()
 
     private lateinit var preferences: SharedPreferences
 
     private var isBatteryReceiverRegistered = false
-    private var isJobActive = true
+    private var isSearchActive = false
     private var isInitialOpen = false
     private var canLaunchShortcut = true
     private var showHidden = false
     private var searchJob: Job? = null
+    private var isResettingSearch = false
 
     private var swipeThreshold = 100
     private var swipeVelocityThreshold = 100
@@ -813,27 +814,30 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
     fun backToHome(animSpeed: Long = sharedPreferenceManager.getAnimationSpeed()) {
         canLaunchShortcut = true
         showHidden = false
+        isResettingSearch = true
+
+        // Clear search immediately to prevent race conditions
+        searchJob?.cancel()
+        searchView.setText(R.string.empty)
+        isSearchActive = false
+
         closeKeyboard()
         animations.showHome(binding.homeView, binding.appView, animSpeed)
         animations.backgroundOut(this@MainActivity, animSpeed)
 
-        // Delay app menu changes so that the user doesn't see them
-
+        // Single delayed operation - no 50ms gaps
         handler.postDelayed({
             try {
-                searchView.setText(R.string.empty)
                 appMenuLinearLayoutManager.setScrollEnabled(true)
+                currentFilteredApps = installedApps
+                lifecycleScope.launch {
+                    refreshAppMenu()
+                }
+                isResettingSearch = false
             } catch (_: UninitializedPropertyAccessException) {
-
+                isResettingSearch = false
             }
         }, animSpeed)
-
-        handler.postDelayed({
-            lifecycleScope.launch {
-                refreshAppMenu()
-            }
-        }, animSpeed + 50)
-
     }
 
     private fun closeKeyboard() {
@@ -846,15 +850,14 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         try {
 
             // Don't reset app menu while under a search
-            if (isJobActive) {
+            if (!isSearchActive) {
                 val updatedApps = appUtils.getInstalledApps(showHidden)
                 if (!listsEqual(installedApps, updatedApps)) {
 
                     updateMenu(updatedApps)
 
                     installedApps = updatedApps
-                    // Update the cache when the app list changes
-                    filteredAppsCache = updatedApps
+                    currentFilteredApps = updatedApps
                 }
             }
         } catch (_: UninitializedPropertyAccessException) {
@@ -1057,6 +1060,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
     }
 
     private suspend fun updateContacts(filterString: String) {
+        isSearchActive = filterString.isNotEmpty()
         val contacts = getContacts(filterString)
         withContext(Dispatchers.Main) {
             contactAdapter?.updateContacts(contacts)
@@ -1088,8 +1092,9 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
             }
 
             override fun afterTextChanged(s: Editable?) {
+                if (isResettingSearch) return
                 searchJob = lifecycleScope.launch {
-                    delay(300) // 300ms debounce delay
+                    delay(150) // 150ms debounce delay
                     withContext(Dispatchers.Default) {
                         filterItems(s.toString())
                     }
@@ -1103,8 +1108,8 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         when (menuView.displayedChild) {
             0 -> {
                 val newFilteredApps = mutableListOf<Triple<LauncherActivityInfo, UserHandle, Int>>()
-                // Use cached installed apps for filtering instead of retrieving from system each time
-                val appsToFilter = if (cleanQuery.isNullOrEmpty()) installedApps else filteredAppsCache
+                // Always filter from full master list
+                val appsToFilter = installedApps
                 val filteredApps = getFilteredApps(cleanQuery, newFilteredApps, appsToFilter)
                 if (filteredApps != null) {
                     applySearchFilter(filteredApps)
@@ -1125,12 +1130,11 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         updatedApps: List<Triple<LauncherActivityInfo, UserHandle, Int>>
     ): List<Triple<LauncherActivityInfo, UserHandle, Int>>? {
         if (cleanQuery.isNullOrEmpty()) {
-            isJobActive = true
+            isSearchActive = false
             updateMenu(installedApps) // Use the original installed apps list
-            filteredAppsCache = installedApps // Reset cache to full list
             return null
         } else {
-            isJobActive = false
+            isSearchActive = true
 
             val fuzzyPattern = if (sharedPreferenceManager.isFuzzySearchEnabled()) {
                 stringUtils.getFuzzyPattern(cleanQuery)
@@ -1153,9 +1157,6 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
                 )
             }
 
-            // Cache the filtered results for potential further filtering
-            filteredAppsCache = filteredList
-
             return filteredList
         }
     }
@@ -1165,7 +1166,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
             appUtils.launchApp(newFilteredApps[0].first.componentName, newFilteredApps[0].second)
         } else {
             updateMenu(newFilteredApps)
-            installedApps = newFilteredApps
+            currentFilteredApps = newFilteredApps
         }
     }
 
