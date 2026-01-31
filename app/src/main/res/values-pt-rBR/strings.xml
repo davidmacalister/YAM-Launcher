@@ -102,7 +102,7 @@
     <string name="gps_location">Localização GPS</string>
     <string name="latest_location">Última localização GPS</string>
     <string name="set_manual_location">Definir localização manualmente</string>
-    <string name="find_your_city">"Pesquise pela sua cidade"</string>
+    <string name="find_your_city">Pesquise pela sua cidade</string>
     <string name="units">Unidades</string>
 
     <string name="shortcuts">Atalhos</string>
