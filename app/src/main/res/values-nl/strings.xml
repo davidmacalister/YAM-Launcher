@@ -1,5 +1,7 @@
 <resources>
     <!--Home Screen-->
+    <string name="set_default_launcher_prompt">YAM Launcher is niet ingesteld als uw standaard start-app.</string>
+    <string name="set_default_launcher_button">Instellen als standaard</string>
     <string name="shortcut_default">Lang ingedrukt houden om app toe te voegen</string>
 
     <string name="shortcut_default_click">Lang klikken om app te selecteren</string>

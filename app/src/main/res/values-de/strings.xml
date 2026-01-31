@@ -1,5 +1,7 @@
 <resources>
     <!--Home Screen-->
+    <string name="set_default_launcher_prompt">YAM Launcher ist nicht als Standard-Startbildschirm festgelegt.</string>
+    <string name="set_default_launcher_button">Als Standard festlegen</string>
     <string name="shortcut_default">Lange drücken, um eine App hinzuzufügen</string>
 
     <string name="shortcut_default_click">Gedrückt halten zum Wählen einer App</string>

@@ -1,5 +1,7 @@
 <resources>
     <!--Home Screen-->
+    <string name="set_default_launcher_prompt">YAM Launcher не встановлено як домашній додаток за замовчуванням.</string>
+    <string name="set_default_launcher_button">Встановити за замовчуванням</string>
     <string name="shortcut_default">Довге натискання, щоб додати додаток</string>
 
     <string name="shortcut_default_click">Довге натискання, щоб вибрати додаток</string>

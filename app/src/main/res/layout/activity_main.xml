@@ -155,6 +155,39 @@
         android:orientation="vertical"
         android:visibility="visible">
 
+        <!-- Default Launcher Banner -->
+        <LinearLayout
+            android:id="@+id/defaultLauncherBanner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/settings_bg"
+            android:orientation="horizontal"
+            android:padding="16dp"
+            android:gravity="center_vertical"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/set_default_launcher_prompt"
+                android:textColor="#F3F3F3"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/setDefaultLauncherButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:text="@string/set_default_launcher_button"
+                android:textSize="14sp"
+                android:textColor="#33B5E5"
+                android:textStyle="bold"
+                android:padding="8dp"
+                android:background="?attr/selectableItemBackground" />
+
+        </LinearLayout>
+
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/clockLayout"
             android:layout_width="match_parent"

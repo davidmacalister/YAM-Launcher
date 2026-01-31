@@ -1,5 +1,7 @@
 <resources>
     <!--Home Screen-->
+    <string name="set_default_launcher_prompt">YAM Launcher no está configurado como tu aplicación de inicio predeterminada.</string>
+    <string name="set_default_launcher_button">Establecer como predeterminado</string>
     <string name="shortcut_default">Mantén pulsado para añadir una aplicación</string>
 
     <string name="shortcut_default_click">Haz clic prolongado para seleccionar una aplicación</string>

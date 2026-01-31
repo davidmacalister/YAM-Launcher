@@ -1,5 +1,7 @@
 <resources>
     <!--Home Screen-->
+    <string name="set_default_launcher_prompt">YAM Launcher is not set as your default home app.</string>
+    <string name="set_default_launcher_button">Set as Default</string>
     <string name="shortcut_default">Long press to add an app</string>
 
     <string name="shortcut_default_click">Long click to select an app</string>

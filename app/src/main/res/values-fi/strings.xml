@@ -1,5 +1,7 @@
 <resources>
     <!--Home Screen-->
+    <string name="set_default_launcher_prompt">YAM Launcher ei ole asetettu oletuskotisovellukseksi.</string>
+    <string name="set_default_launcher_button">Aseta oletukseksi</string>
     <string name="shortcut_default">Paina pitkään lisätäksesi sovelluksen</string>
 
     <string name="shortcut_default_click">Paina pitkään valitaksesi sovelluksen</string>

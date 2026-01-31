@@ -185,6 +185,9 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         }
 
         setupApps()
+        
+        // Check if default launcher banner should be shown
+        updateDefaultLauncherBanner()
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
             uiUtils.setLayoutListener(binding.root) // Manually resize app menu on search since adjustResize no longer works with sdk 35
@@ -508,6 +511,17 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
             super.onTouchEvent(event)
             gestureDetector.onTouchEvent(event)
             true
+        }
+        
+        // Set up default launcher banner button
+        findViewById<android.widget.TextView>(R.id.setDefaultLauncherButton)?.setOnClickListener {
+            val intent = Intent(android.provider.Settings.ACTION_HOME_SETTINGS)
+            try {
+                startActivity(intent)
+            } catch (e: ActivityNotFoundException) {
+                logger.w("MainActivity", "Unable to launch home settings")
+                Toast.makeText(this, getString(R.string.unable_to_launch_settings), Toast.LENGTH_SHORT).show()
+            }
         }
 
         clock.setOnClickListener { _ ->
@@ -1235,6 +1249,27 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         }
         returnAllowed = true
         appAdapter?.notifyDataSetChanged()
+        
+        // Check and update default launcher banner visibility
+        updateDefaultLauncherBanner()
+    }
+    
+    private fun updateDefaultLauncherBanner() {
+        val defaultLauncherBanner = findViewById<LinearLayout>(R.id.defaultLauncherBanner)
+        if (!isDefaultLauncher()) {
+            defaultLauncherBanner?.visibility = View.VISIBLE
+        } else {
+            defaultLauncherBanner?.visibility = View.GONE
+        }
+    }
+    
+    private fun isDefaultLauncher(): Boolean {
+        val packageManager = packageManager
+        val intent = Intent(Intent.ACTION_MAIN).apply {
+            addCategory(Intent.CATEGORY_HOME)
+        }
+        val resolveInfo = packageManager.resolveActivity(intent, 0)
+        return resolveInfo?.activityInfo?.packageName == packageName
     }
 
     override fun onItemClick(appInfo: LauncherActivityInfo, userHandle: UserHandle) {
